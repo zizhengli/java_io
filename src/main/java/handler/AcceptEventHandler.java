@@ -1,5 +1,6 @@
 package handler;
 
+import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -10,18 +11,28 @@ import java.nio.channels.SocketChannel;
  */
 public class AcceptEventHandler implements EventHandler {
 
-    private Selector demultiplexor;
-    public AcceptEventHandler(Selector demultiplexor) {
-        this.demultiplexor = demultiplexor;
+    private Selector selector;
+    private SelectionKey handle;
+
+    public AcceptEventHandler(Selector selector) {
+        this.selector = selector;
     }
 
-    public void handleEvent(SelectionKey handle) throws Exception {
+    public void setHandleEvent(SelectionKey handle) {
+        this.handle = handle;
+    }
+
+    public void handle() {
         System.out.println("===== Accept Event Handler =====");
-        ServerSocketChannel serverSocketChannel = (ServerSocketChannel) handle.channel();
-        SocketChannel socketChannel = serverSocketChannel.accept();
-        if (socketChannel != null) {
-            socketChannel.configureBlocking(false);
-            socketChannel.register(demultiplexor, SelectionKey.OP_READ);
+        try {
+            ServerSocketChannel serverSocketChannel = (ServerSocketChannel) handle.channel();
+            SocketChannel socketChannel = serverSocketChannel.accept();
+            if (socketChannel != null) {
+                socketChannel.configureBlocking(false);
+                socketChannel.register(selector, SelectionKey.OP_READ);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

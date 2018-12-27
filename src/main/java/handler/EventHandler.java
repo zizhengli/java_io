@@ -6,6 +6,6 @@ import java.nio.channels.SelectionKey;
  *
  */
 public interface EventHandler {
-
-    public void handleEvent(SelectionKey handle) throws Exception;
+    public void setHandleEvent(SelectionKey handle);
+    public void handle();
 }

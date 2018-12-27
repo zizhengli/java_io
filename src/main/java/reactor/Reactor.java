@@ -1,65 +1,51 @@
 package reactor;
 
+import handler.AcceptEventHandler;
 import handler.EventHandler;
+import handler.ReadEventHandler;
+import handler.WriteEventHandler;
 
-import java.nio.channels.SelectableChannel;
+import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.nio.channels.ServerSocketChannel;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 /**
  *
  */
 public class Reactor {
 
-    private Map<Integer, EventHandler> registeredHandlers = new ConcurrentHashMap<Integer, EventHandler>();
-    private Selector demultiplexor;
+    private final static int SERVER_PORT = 8888;
+    private final static int QUEUE_SIZE = 10;
+    private BlockingQueue<EventHandler> handlerTaskQueue;
 
-    public Reactor() throws Exception {
-        demultiplexor = Selector.open();
+    private Reactor() {
+        this.handlerTaskQueue = new ArrayBlockingQueue<EventHandler>(QUEUE_SIZE);
     }
 
-    public void registerEventHandler(int eventType, EventHandler eventHandler) {
-        registeredHandlers.put(eventType, eventHandler);
+    public void startReactor() throws Exception {
+
+        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+        serverSocketChannel.socket().bind(new InetSocketAddress(SERVER_PORT));
+        serverSocketChannel.configureBlocking(false);
+        Acceptor acceptor = new Acceptor(handlerTaskQueue);
+        acceptor.registerChannel(SelectionKey.OP_ACCEPT, serverSocketChannel);
+
+        acceptor.registerEventHandler(SelectionKey.OP_ACCEPT, new AcceptEventHandler(acceptor.getSelector()));
+        acceptor.registerEventHandler(SelectionKey.OP_READ, new ReadEventHandler(acceptor.getSelector()));
+        acceptor.registerEventHandler(SelectionKey.OP_WRITE, new WriteEventHandler());
+        new Thread(acceptor).start(); // Run the dispatcher loop
+
+        new Thread(new ReactorEventHandler(this.handlerTaskQueue)).start();
     }
 
-    public void registerChannel(int eventType, SelectableChannel channel) throws Exception {
-        channel.register(demultiplexor, eventType);
-    }
-
-    public void run() {
+    public static void main(String[] args) {
+        System.out.println("Server Started at port : " + SERVER_PORT);
         try {
-            while (true) {
-                demultiplexor.select();
-                Set<SelectionKey> readyHandles = demultiplexor.selectedKeys();
-                Iterator<SelectionKey> handleIterator = readyHandles.iterator();
-                while (handleIterator.hasNext()) {
-                    SelectionKey handle = handleIterator.next();
-                    if (handle.isAcceptable()) {
-                        EventHandler handler = registeredHandlers.get(SelectionKey.OP_ACCEPT);
-                        handler.handleEvent(handle);
-                    }
-                    if (handle.isReadable()) {
-                        EventHandler handler = registeredHandlers.get(SelectionKey.OP_READ);
-                        handler.handleEvent(handle);
-                        handleIterator.remove();
-                    }
-                    if (handle.isWritable()) {
-                        EventHandler handler = registeredHandlers.get(SelectionKey.OP_WRITE);
-                        handler.handleEvent(handle);
-                        handleIterator.remove();
-                    }
-                }
-            }
+            new Reactor().startReactor();
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public Selector getDemultiplexor() {
-        return demultiplexor;
     }
 }

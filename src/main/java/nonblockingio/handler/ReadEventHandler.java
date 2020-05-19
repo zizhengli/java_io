@@ -1,4 +1,4 @@
-package handler;
+package nonblockingio.handler;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -30,12 +30,12 @@ public class ReadEventHandler implements EventHandler {
                 throw new IOException("Handle is null");
             }
             SocketChannel socketChannel = (SocketChannel) handle.channel();
-            socketChannel.read(inputBuffer); // Read data from client.client
+            socketChannel.read(inputBuffer); // Read data from nonblockingio.client.nonblockingio.client
             inputBuffer.flip();
             // Rewind the buffer to start reading from the beginning
             byte[] buffer = new byte[inputBuffer.limit()];
             inputBuffer.get(buffer);
-            System.out.println("Received message from client : " + new String(buffer));
+            System.out.println("Received message from nonblockingio.client : " + new String(buffer));
             inputBuffer.flip();
             socketChannel.register(selector, SelectionKey.OP_WRITE, inputBuffer);
         } catch (IOException e) {

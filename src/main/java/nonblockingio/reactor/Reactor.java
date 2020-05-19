@@ -1,9 +1,9 @@
-package reactor;
+package nonblockingio.reactor;
 
-import handler.AcceptEventHandler;
-import handler.EventHandler;
-import handler.ReadEventHandler;
-import handler.WriteEventHandler;
+import nonblockingio.handler.AcceptEventHandler;
+import nonblockingio.handler.EventHandler;
+import nonblockingio.handler.ReadEventHandler;
+import nonblockingio.handler.WriteEventHandler;
 
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;

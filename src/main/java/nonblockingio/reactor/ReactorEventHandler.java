@@ -1,6 +1,6 @@
-package reactor;
+package nonblockingio.reactor;
 
-import handler.EventHandler;
+import nonblockingio.handler.EventHandler;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;

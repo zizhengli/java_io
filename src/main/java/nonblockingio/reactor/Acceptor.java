@@ -1,6 +1,6 @@
-package reactor;
+package nonblockingio.reactor;
 
-import handler.EventHandler;
+import nonblockingio.handler.EventHandler;
 
 import java.nio.channels.*;
 import java.util.Iterator;
